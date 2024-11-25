@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
+from fastapi.middleware.cors import CORSMiddleware
 
 # Configurações
 SECRET_KEY = "mysecretkey"  # Alterar para uma chave segura em produção
@@ -72,6 +73,14 @@ def authenticate_user(db: Session, email: str, password: str):
 
 # Inicialização do FastAPI
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permitir todas as origens (ajuste conforme necessário)
+    allow_credentials=True,
+    allow_methods=["*"],  # Permitir todos os métodos (POST, GET, etc.)
+    allow_headers=["*"],  # Permitir todos os headers
+)
 
 # Rotas de exemplo
 @app.get("/")
