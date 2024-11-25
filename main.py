@@ -73,7 +73,16 @@ def authenticate_user(db: Session, email: str, password: str):
 # Inicialização do FastAPI
 app = FastAPI()
 
-# Rotas
+# Rotas de exemplo
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
+@app.get("/items/{item_id}")
+async def read_item(item_id: int):
+    return {"item_id": item_id}
+
+# Rotas de autenticação
 @app.post("/register", response_model=dict)
 async def register(user: UserRegister, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.email == user.email).first()
@@ -97,7 +106,7 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/protected")
-async def protected_route(token: str = Depends(lambda: "user_token")): # Simulação de token
+async def protected_route(token: str = Depends(lambda: "user_token")):  # Simulação de token
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")

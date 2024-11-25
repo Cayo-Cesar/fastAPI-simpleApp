@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login e Registro</title>
+</head>
+<body>
+  <h1>Registro</h1>
+  <form id="registerForm">
+    <input type="email" id="registerEmail" placeholder="Email" required />
+    <input type="password" id="registerPassword" placeholder="Senha" required />
+    <button type="submit">Registrar</button>
+  </form>
+
+  <h1>Login</h1>
+  <form id="loginForm">
+    <input type="email" id="loginEmail" placeholder="Email" required />
+    <input type="password" id="loginPassword" placeholder="Senha" required />
+    <button type="submit">Entrar</button>
+  </form>
+
+  <h1>Rota Protegida</h1>
+  <button id="protectedButton">Acessar Rota Protegida</button>
+  <div id="protectedMessage"></div>
+
+  <script>
+    const baseUrl = "http://127.0.0.1:8000"; // URL do backend
+    let accessToken = ""; // Token armazenado após login bem-sucedido
+
+    // Registro
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("registerEmail").value;
+      const password = document.getElementById("registerPassword").value;
+
+      const response = await fetch(`${baseUrl}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const result = await response.json();
+      alert(result.message || "Erro no registro");
+    });
+
+    // Login
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
+
+      const response = await fetch(`${baseUrl}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        accessToken = result.access_token; // Armazena o token JWT
+        alert("Login bem-sucedido!");
+      } else {
+        alert(result.detail || "Erro no login");
+      }
+    });
+
+    // Rota protegida
+    document.getElementById("protectedButton").addEventListener("click", async () => {
+      const response = await fetch(`${baseUrl}/protected`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const result = await response.json();
+      document.getElementById("protectedMessage").innerText =
+        result.message || "Erro ao acessar a rota protegida";
+    });
+  </script>
+</body>
+</html>
