@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
@@ -74,13 +75,17 @@ def authenticate_user(db: Session, email: str, password: str):
 # Inicialização do FastAPI
 app = FastAPI()
 
+# Adiciona o middleware CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permitir todas as origens (ajuste conforme necessário)
+    allow_origins=["*"],  # Permite todas as origens (ajuste conforme necessário)
     allow_credentials=True,
-    allow_methods=["*"],  # Permitir todos os métodos (POST, GET, etc.)
-    allow_headers=["*"],  # Permitir todos os headers
+    allow_methods=["*"],  # Permite todos os métodos (POST, GET, etc.)
+    allow_headers=["*"],  # Permite todos os cabeçalhos
 )
+
+# Inicializa o OAuth2PasswordBearer para buscar o token no cabeçalho Authorization
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # Rotas de autenticação
 @app.post("/register", response_model=dict)
@@ -106,12 +111,15 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/protected")
-async def protected_route(token: str = Depends(lambda: "user_token")):  # Simulação de token
+async def protected_route(token: str = Depends(oauth2_scheme)):  # Agora pega o token do cabeçalho Authorization
     try:
+        # Decodifica o token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         if not email:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    
     return {"message": "You have access to the protected route"}
+
