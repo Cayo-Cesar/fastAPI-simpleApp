@@ -54,6 +54,7 @@ def get_db():
     finally:
         db.close()
 
+
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
@@ -122,4 +123,5 @@ async def protected_route(token: str = Depends(oauth2_scheme)):  # Agora pega o 
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     
     return {"message": "You have access to the protected route"}
+
 
